@@ -1,0 +1,18 @@
+{
+  "game": "My Game",
+  "engine": "<path to the engine>",
+  "blender": "<path to Blender>",
+  "uproject": "MyGame.uproject",
+  "editorTarget": "MyGameEditor",
+  "map": "/Game/Maps/Main",
+  "scripts": "Tools",
+  "shots": "Saved/Shots",
+  "linear": {
+    "project": "My Game"
+  },
+  "designDoc": {
+    "url": "",
+    "title": ""
+  },
+  "debugFile": "Saved/Debug.txt"
+}

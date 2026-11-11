@@ -1,0 +1,355 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dev Hub</title>
+<style>
+  :root {
+    --bg: #12151a; --panel: #1a1f26; --panel2: #212831; --line: #2c3540; --fg: #dfe5ec; --dim: #8a96a3; --faint: #5b6672;
+    --pass: #3fb37f; --fail: #e5534b; --warn: #d9a03f; --skip: #4a5562; --accent: #6cb6ff;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: 14px/1.45 "Segoe UI", system-ui, sans-serif; }
+  a { color: var(--accent); text-decoration: none; } a:hover { text-decoration: underline; }
+  header { display: flex; align-items: center; gap: 18px; padding: 12px 20px; border-bottom: 1px solid var(--line); background: var(--panel); position: sticky; top: 0; z-index: 5; }
+  header h1 { font-size: 16px; margin: 0; letter-spacing: .02em; }
+  header .build { color: var(--dim); font-family: Consolas, monospace; font-size: 12px; }
+  nav { display: flex; gap: 4px; margin-left: 12px; }
+  nav button { background: none; border: 1px solid transparent; color: var(--dim); padding: 6px 12px; border-radius: 6px; cursor: pointer; font: inherit; }
+  nav button.on { color: var(--fg); background: var(--panel2); border-color: var(--line); }
+  header .right { margin-left: auto; color: var(--faint); font-size: 12px; }
+  main { padding: 20px; max-width: 1500px; margin: 0 auto; }
+  .row { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); margin-bottom: 16px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; min-width: 0; }
+  .card h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--dim); margin: 0 0 10px; font-weight: 600; }
+  .big { font-size: 26px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .chip { display: inline-block; padding: 2px 9px; border-radius: 99px; font-size: 12px; font-weight: 600; letter-spacing: .03em; }
+  .chip.green, .chip.pass { background: color-mix(in srgb, var(--pass) 22%, transparent); color: var(--pass); }
+  .chip.red, .chip.fail { background: color-mix(in srgb, var(--fail) 22%, transparent); color: var(--fail); }
+  .chip.skipped, .chip.missing { background: color-mix(in srgb, var(--warn) 22%, transparent); color: var(--warn); }
+  .muted { color: var(--dim); } .faint { color: var(--faint); }
+  table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
+  td, th { padding: 5px 8px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+  th { color: var(--dim); font-weight: 600; font-size: 12px; }
+  .kv { display: grid; grid-template-columns: max-content 1fr; gap: 3px 14px; font-size: 13px; }
+  .kv div:nth-child(odd) { color: var(--dim); }
+  .fail-item { border-left: 3px solid var(--fail); padding: 6px 10px; margin: 6px 0; background: var(--panel2); border-radius: 0 6px 6px 0; }
+  .fail-item code { font-size: 12px; color: var(--dim); }
+  .fail-item pre { margin: 4px 0 0; white-space: pre-wrap; font-size: 12px; color: var(--dim); }
+  .shots { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; }
+  .shots a { display: block; color: var(--dim); font-size: 12px; }
+  .shots img { width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: 5px; border: 1px solid var(--line); display: block; margin-bottom: 3px; }
+  /* tests grid */
+  .gridwrap { overflow: auto; max-height: calc(100vh - 140px); border: 1px solid var(--line); border-radius: 8px; }
+  .grid { border-collapse: separate; border-spacing: 0; }
+  .grid th, .grid td { border-bottom: 1px solid var(--line); padding: 0; }
+  .grid thead th { position: sticky; top: 0; background: var(--panel); z-index: 2; padding: 4px 2px; font-size: 10px; writing-mode: vertical-rl; transform: rotate(180deg); height: 110px; font-weight: 500; }
+  .grid thead th.name { writing-mode: horizontal-tb; transform: none; text-align: left; padding: 6px 10px; left: 0; z-index: 3; }
+  .grid td.name { position: sticky; left: 0; background: var(--panel); padding: 3px 10px; white-space: nowrap; font-size: 13px; z-index: 1; }
+  .grid tr.group td { background: var(--panel2); color: var(--dim); font-size: 11px; text-transform: uppercase; letter-spacing: .08em; padding: 4px 10px; }
+  .grid td.c { width: 18px; min-width: 18px; height: 22px; }
+  .grid td.c a { display: block; width: 14px; height: 16px; margin: 3px 2px; border-radius: 3px; }
+  .s-pass { background: var(--pass); } .s-fail { background: var(--fail); } .s-none { background: transparent; border: 1px dashed var(--line); }
+  .partial { opacity: .55; }
+  .spark { width: 100%; height: 70px; }
+  .note { font-size: 12px; color: var(--faint); margin-top: 8px; }
+  .bar { display: flex; align-items: center; gap: 8px; margin: 3px 0; font-size: 13px; }
+  .bar span:first-child { width: 190px; color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .bar i { height: 10px; background: var(--accent); border-radius: 3px; display: block; }
+  /* mechanics */
+  .mech { display: grid; grid-template-columns: minmax(420px, 1.1fr) minmax(380px, 1fr); gap: 16px; align-items: start; }
+  .mech-bar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 12px; }
+  .mech-bar input[type=search] { background: var(--panel2); border: 1px solid var(--line); color: var(--fg); padding: 6px 10px; border-radius: 6px; font: inherit; min-width: 220px; }
+  .mech-bar button, .tun button { background: var(--panel2); border: 1px solid var(--line); color: var(--fg); padding: 5px 10px; border-radius: 6px; cursor: pointer; font: inherit; font-size: 12px; }
+  .mech-bar button:hover, .tun button:hover { border-color: var(--accent); }
+  .mech-bar select { background: var(--panel2); border: 1px solid var(--line); color: var(--fg); padding: 5px 8px; border-radius: 6px; font: inherit; font-size: 12px; }
+  .mapsvg { width: 100%; height: auto; display: block; }
+  .mapsvg .box rect { fill: var(--panel2); stroke: var(--line); stroke-width: 1.5; rx: 8; cursor: pointer; }
+  .mapsvg .box:hover rect { stroke: var(--accent); }
+  .mapsvg .box.on rect { stroke: var(--accent); stroke-width: 2.5; }
+  .mapsvg .box.planned { opacity: .45; }
+  .mapsvg .box text { fill: var(--fg); font-size: 14px; font-weight: 600; pointer-events: none; }
+  .mapsvg .box text.sub { fill: var(--dim); font-size: 11px; font-weight: 400; }
+  .mapsvg .box text.changed { fill: var(--warn); font-size: 11px; font-weight: 600; }
+  .mapsvg .edge { stroke: var(--faint); stroke-width: 1.5; fill: none; }
+  .mapsvg .edge.hot { stroke: var(--accent); stroke-width: 2.5; }
+  .mapsvg .edgelabel { fill: var(--dim); font-size: 10px; }
+  .tun { border-bottom: 1px solid var(--line); padding: 10px 0; }
+  .tun.changed { border-left: 3px solid var(--warn); padding-left: 10px; }
+  .tun .top { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+  .tun .name { font-weight: 600; } .tun .id { color: var(--faint); font-family: Consolas, monospace; font-size: 11px; }
+  .tun .desc { color: var(--dim); font-size: 12px; margin: 3px 0 6px; }
+  .tun .ctl { display: flex; align-items: center; gap: 10px; }
+  .tun input[type=range] { flex: 1; accent-color: var(--accent); }
+  .tun input[type=number] { width: 84px; background: var(--panel2); border: 1px solid var(--line); color: var(--fg); padding: 4px 6px; border-radius: 5px; font: inherit; }
+  .chip.applies { background: var(--panel2); color: var(--dim); border: 1px solid var(--line); font-weight: 500; }
+  .chip.now { color: var(--pass); }
+  .hist { font-size: 12px; color: var(--dim); max-height: 220px; overflow: auto; }
+  .hist div { padding: 2px 0; border-bottom: 1px dashed var(--line); }
+</style>
+</head>
+<body>
+<header>
+  <h1 id="game">Dev Hub</h1><span class="build" id="build"></span>
+  <nav>
+    <button data-tab="start">Start here</button>
+    <button data-tab="today" class="on">Today</button>
+    <button data-tab="tests">Tests</button>
+    <button data-tab="nightlies">Nightlies</button>
+    <button data-tab="linear">Linear</button>
+    <button data-tab="mechanics">Mechanics</button>
+  </nav>
+  <span class="right" id="stamp"></span>
+</header>
+<main id="main"></main>
+<script>
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const when = (iso) => { if (!iso) return '—'; const d = new Date(iso); return isNaN(d) ? esc(iso) : d.toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }); };
+const ago = (iso) => { if (!iso) return ''; const m = Math.round((Date.now() - new Date(iso)) / 60000); return m < 60 ? `${m} min ago` : m < 2880 ? `${Math.round(m / 60)} h ago` : `${Math.round(m / 1440)} days ago`; };
+const link = (href, text) => href ? `<a href="${href}" target="_blank">${esc(text)}</a>` : `<span class="faint">${esc(text)}</span>`;
+const get = (p) => fetch(p).then((r) => r.json());
+let tab = (location.hash || '#today').slice(1);
+
+function failList(fails) {
+  if (!fails || !fails.length) return '<div class="muted">None.</div>';
+  return fails.map((f) => `<div class="fail-item"><div>${esc(f.title)}</div><code>${esc(f.key)}</code>${f.detail ? `<pre>${esc(f.detail)}</pre>` : ''}</div>`).join('');
+}
+function spark(points) {
+  if (points.length < 2) return '<div class="muted">Needs two nightlies with a frame-rate capture.</div>';
+  const w = 300, h = 60, vals = points.map((p) => p.fps), lo = Math.min(...vals) * 0.95, hi = Math.max(...vals) * 1.05;
+  const x = (i) => 4 + i * (w - 8) / (points.length - 1), y = (v) => h - 4 - (v - lo) / (hi - lo || 1) * (h - 8);
+  const d = points.map((p, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)},${y(p.fps).toFixed(1)}`).join(' ');
+  return `<svg class="spark" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none"><path d="${d}" fill="none" stroke="var(--accent)" stroke-width="2"/>
+    ${points.map((p, i) => `<circle cx="${x(i)}" cy="${y(p.fps)}" r="2.5" fill="var(--accent)"><title>${p.date}: ${p.fps} fps</title></circle>`).join('')}</svg>`;
+}
+
+async function showToday() {
+  const t = await get('/api/today');
+  $('#game').textContent = `${t.game} · Dev Hub`;
+  $('#build').textContent = t.build || '';
+  const g = t.gate, n = t.nightly;
+  const gateOk = g && g.failed === 0 && !g.invariants;
+  const steps = (n?.steps || []).map((s) => `<tr><td>${esc(s.name)}</td><td><span class="chip ${s.ok ? 'pass' : 'fail'}">${s.ok ? 'ok' : 'fail'}</span></td>
+    <td class="muted">${s.seconds}s</td><td>${s.href ? link(s.href, s.detail || s.log) : esc(s.detail)}</td></tr>`).join('');
+  const m = n?.metrics || {};
+  $('#main').innerHTML = `
+  <div class="row">
+    <div class="card"><h2>Gate (last full run)</h2>
+      ${g ? `<div class="big"><span class="chip ${gateOk ? 'green' : 'red'}" style="font-size:14px">${gateOk ? 'GREEN' : 'RED'}</span> ${g.passed}/${g.total}</div>
+      <div class="kv" style="margin-top:8px"><div>When</div><div>${when(g.at)} <span class="faint">${ago(g.at)}</span></div>
+      <div>Build</div><div>${esc(g.build)}</div><div>Invariants</div><div>${g.invariants ?? 0}</div>
+      <div>Evidence</div><div>${link(g.txt, 'report')} · ${link(g.json, 'json')}</div>
+      <div>Commit stamp</div><div>${t.validateOk ? `${when(t.validateOk)} <span class="faint">(Validate.ok)</span>` : '—'}</div></div>
+      ${g.failing.length ? `<h2 style="margin-top:12px">Failing</h2>${g.failing.map((f) => `<div class="fail-item">${esc(f.name)}<pre>${esc(f.message)}</pre></div>`).join('')}` : ''}`
+      : '<div class="muted">No full test run found.</div>'}
+    </div>
+    <div class="card"><h2>Last nightly</h2>
+      ${n ? `<div class="big"><span class="chip ${esc(n.status)}" style="font-size:14px">${esc(n.status).toUpperCase()}</span> ${esc(n.date)}</div>
+      <div class="kv" style="margin-top:8px"><div>Ran</div><div>${when(n.started)} · ${n.minutes} min</div><div>Build</div><div>${esc(n.build)} ${n.dirty ? '<span class="faint">(uncommitted changes)</span>' : ''}</div>
+      <div>Soak</div><div>${esc(m.soak_day || '—')} · tier ${esc(m.soak_tier || '—')} · ${esc(m.soak_people || '—')} people · invariants ${m.soak_invariants ?? '—'}</div>
+      <div>Frame rate</div><div>${m.fps ? `${m.fps} fps` : '—'} ${m.fps_previous ? `<span class="faint">(was ${m.fps_previous})</span>` : ''} · hitches ${m.hitches ?? '—'}</div>
+      <div>Files</div><div>${link(n.links.summary, 'summary')} · ${link(n.links.gate, 'gate log')} · ${link(n.links.perf, 'perf log')} · ${link(n.links.invariants, 'invariants')}</div></div>
+      <table style="margin-top:10px">${steps}</table>` : '<div class="muted">No nightly has run yet. It runs at 03:30 (Tools/nightly.ps1).</div>'}
+    </div>
+    <div class="card"><h2>New failures since the night before</h2>${failList(t.newFailures)}
+      <h2 style="margin-top:14px">All failures last night</h2>${failList(n?.failures)}</div>
+  </div>
+  <div class="row">
+    <div class="card"><h2>Frame rate, busy camp (nightly)</h2>${spark(t.fps)}<div class="note">Tools/perf.ps1 at 3440×1440; a drop over 15% is a nightly failure.</div></div>
+    <div class="card" style="grid-column: span 2"><h2>Audit shots, last nightly (${n?.audit?.length || 0})</h2>
+      <div class="shots">${(n?.audit || []).map((s) => `<a href="${s.href}" target="_blank"><img loading="lazy" src="${s.href}" alt="">${esc(s.name)}</a>`).join('') || '<span class="muted">None yet.</span>'}</div></div>
+  </div>`;
+}
+
+async function showTests() {
+  const t = await get('/api/tests');
+  const most = Math.max(0, ...t.runs.map((r) => r.total || 0));
+  const head = t.runs.map((r) => `<th class="${r.total < most ? 'partial' : ''}" title="${esc(r.build)} · ${r.passed}/${r.total}${r.invariants ? ' · ' + r.invariants + ' invariants' : ''}">${esc(new Date(r.started).toLocaleString([], { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false }))}</th>`).join('');
+  let group = '', body = '';
+  for (const row of t.rows) {
+    if (row.group !== group) { group = row.group; body += `<tr class="group"><td class="name">${esc(group)}</td><td colspan="${t.runs.length}"></td></tr>`; }
+    body += `<tr><td class="name">${esc(row.name)}</td>${row.cells.map((c, i) => {
+      const r = t.runs[i];
+      if (!c) return `<td class="c"><a class="s-none" title="not in this run"></a></td>`;
+      return `<td class="c"><a class="s-${c.state === 'pass' ? 'pass' : 'fail'}" href="${r.txt || '#'}" target="_blank" title="${esc(row.name)} · ${esc(c.state)} · ${c.seconds}s\n${esc(c.message)}\n${esc(r.build)}"></a></td>`;
+    }).join('')}</tr>`;
+  }
+  $('#main').innerHTML = `<div class="note" style="margin:0 0 10px">One row per scenario test, one column per run (newest on the right; faded columns ran only some groups). Hover for the message, click for the run's report.</div>
+    <div class="gridwrap"><table class="grid"><thead><tr><th class="name">Test</th>${head}</tr></thead><tbody>${body}</tbody></table></div>`;
+}
+
+async function showNightlies() {
+  const all = await get('/api/nightlies');
+  $('#main').innerHTML = all.length ? `<div class="card"><table><tr><th>Night</th><th>Status</th><th>Build</th><th>Minutes</th><th>Gate</th><th>Soak</th><th>FPS</th><th>Failures</th><th>Files</th></tr>
+    ${all.map((n) => n.status === 'missing' ? `<tr><td>${esc(n.date)}</td><td><span class="chip missing">no summary</span></td><td colspan="7"></td></tr>` :
+      `<tr><td>${esc(n.date)}</td><td><span class="chip ${esc(n.status)}">${esc(n.status)}</span></td><td>${esc(n.build)}</td><td>${n.minutes}</td>
+      <td>${esc(n.metrics?.Done || '—')}</td><td>${esc(n.metrics?.soak_day || '—')}</td><td>${n.metrics?.fps ?? '—'}</td>
+      <td>${(n.failures || []).map((f) => `<div><code>${esc(f.key)}</code></div>`).join('') || '—'}</td>
+      <td>${link(n.links.summary, 'summary')} · ${link(n.links.gate, 'gate')}</td></tr>`).join('')}</table></div>`
+    : '<div class="card muted">No nightlies yet.</div>';
+}
+
+async function showLinear() {
+  const l = await get('/api/linear');
+  if (l.missing) { $('#main').innerHTML = `<div class="card muted">No Linear snapshot yet. The morning triage task writes Saved/DevHub/linear.json.</div>`; return; }
+  const bars = (obj) => { const max = Math.max(1, ...Object.values(obj)); return Object.entries(obj).sort((a, b) => b[1] - a[1]).map(([k, v]) => `<div class="bar"><span title="${esc(k)}">${esc(k)}</span><i style="width:${Math.round(v / max * 220)}px"></i><b>${v}</b></div>`).join(''); };
+  $('#main').innerHTML = `<div class="note" style="margin:0 0 10px">Snapshot of ${esc(l.project)} taken ${when(l.at)} (${ago(l.at)}). Read-only.</div>
+  <div class="row">
+    <div class="card"><h2>By state</h2>${bars(l.byState || {})}</div>
+    <div class="card"><h2>Open by area</h2>${bars(l.byArea || {})}</div>
+    <div class="card"><h2>Open by milestone</h2>${bars(l.byMilestone || {})}</div>
+  </div>
+  <div class="row"><div class="card"><h2>Needs Human Attention (${(l.review || []).length})</h2>
+    <table>${(l.review || []).map((i) => `<tr><td style="white-space:nowrap">${link(i.url, i.id)}</td><td>${esc(i.title)}</td><td class="muted">${esc(i.area || '')}</td></tr>`).join('')}</table></div>
+  <div class="card"><h2>In progress</h2><table>${(l.inProgress || []).map((i) => `<tr><td style="white-space:nowrap">${link(i.url, i.id)}</td><td>${esc(i.title)}</td></tr>`).join('') || '<tr><td class="muted">Nothing.</td></tr>'}</table></div></div>`;
+}
+
+// ---------------------------------------------------------------- Mechanics: the map of systems, the numbers
+const mech = { data: null, system: null, search: '', changedOnly: false, said: '' };
+const post = (body) => fetch('/api/mechanics', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) }).then((r) => r.json());
+const fmt = (v, step) => { const d = String(step).includes('.') ? String(step).split('.')[1].length : 0; return Number(v).toFixed(Math.min(4, d)); };
+
+function mechMap(d) {
+  const W = 190, H = 74, GX = 60, GY = 46, pad = 16;
+  const pos = Object.fromEntries(d.systems.map((s) => [s.id, { x: pad + s.at[0] * (W + GX), y: pad + s.at[1] * (H + GY) }]));
+  const cols = Math.max(...d.systems.map((s) => s.at[0])) + 1, rows = Math.max(...d.systems.map((s) => s.at[1])) + 1;
+  const vw = pad * 2 + cols * W + (cols - 1) * GX, vh = pad * 2 + rows * H + (rows - 1) * GY;
+  const count = (id) => d.tunables.filter((t) => t.system === id).length;
+  const changed = (id) => d.tunables.filter((t) => t.system === id && t.changed).length;
+  // an edge from one box's side to the other's, a gentle curve, its label at the middle on hover
+  const edges = d.feeds.filter((f) => pos[f.from] && pos[f.to]).map((f) => {
+    const a = pos[f.from], b = pos[f.to];
+    const ax = a.x + W / 2, ay = a.y + H / 2, bx = b.x + W / 2, by = b.y + H / 2;
+    const dx = bx - ax, dy = by - ay, len = Math.hypot(dx, dy) || 1;
+    // start and end at the boxes' edges
+    const clip = (x, y, sx, sy) => { const tx = (W / 2) / Math.abs(sx || 1e-6), ty = (H / 2) / Math.abs(sy || 1e-6); const t = Math.min(tx, ty); return [x + sx * t, y + sy * t]; };
+    const [x1, y1] = clip(ax, ay, dx / len, dy / len), [x2, y2] = clip(bx, by, -dx / len, -dy / len);
+    const mx = (x1 + x2) / 2 - dy / len * 18, my = (y1 + y2) / 2 + dx / len * 18;
+    const hot = mech.system && (f.from === mech.system || f.to === mech.system);
+    return `<g><path class="edge ${hot ? 'hot' : ''}" d="M${x1},${y1} Q${mx},${my} ${x2},${y2}" marker-end="url(#arrow${hot ? 'hot' : ''})"><title>${esc(f.from)} → ${esc(f.to)}: ${esc(f.what)}</title></path>
+      ${hot ? `<text class="edgelabel" x="${mx}" y="${my}" text-anchor="middle">${esc(f.what)}</text>` : ''}</g>`;
+  }).join('');
+  const boxes = d.systems.map((s) => {
+    const p = pos[s.id], c = changed(s.id);
+    return `<g class="box ${mech.system === s.id ? 'on' : ''} ${s.planned ? 'planned' : ''}" data-sys="${esc(s.id)}" transform="translate(${p.x},${p.y})">
+      <rect width="${W}" height="${H}"><title>${esc(s.what)}</title></rect>
+      <text x="12" y="24">${esc(s.name)}</text>
+      <text class="sub" x="12" y="44">${s.planned ? 'planned' : `${count(s.id)} number${count(s.id) === 1 ? '' : 's'}`}</text>
+      ${c ? `<text class="changed" x="12" y="62">${c} changed</text>` : ''}</g>`;
+  }).join('');
+  return `<svg class="mapsvg" viewBox="0 0 ${vw} ${vh}">
+    <defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="var(--faint)"/></marker>
+    <marker id="arrowhot" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="var(--accent)"/></marker></defs>
+    ${edges}${boxes}</svg>`;
+}
+
+function mechList(d) {
+  const q = mech.search.toLowerCase();
+  let list = d.tunables;
+  if (q) list = list.filter((t) => [t.name, t.id, t.desc, t.group].join(' ').toLowerCase().includes(q));
+  else if (mech.system) list = list.filter((t) => t.system === mech.system);
+  if (mech.changedOnly) list = list.filter((t) => t.changed);
+  const sys = d.systems.find((s) => s.id === mech.system);
+  const head = q ? `Search: “${esc(mech.search)}”` : sys ? esc(sys.name) : mech.changedOnly ? 'Everything you changed' : 'Pick a system on the map';
+  const feeds = sys ? d.feeds.filter((f) => f.from === sys.id || f.to === sys.id).map((f) => f.from === sys.id
+    ? `<div>→ <b>${esc(d.systems.find((s) => s.id === f.to)?.name || f.to)}</b>: ${esc(f.what)}</div>` : `<div>← <b>${esc(d.systems.find((s) => s.id === f.from)?.name || f.from)}</b>: ${esc(f.what)}</div>`).join('') : '';
+  const rows = list.map((t) => `<div class="tun ${t.changed ? 'changed' : ''}">
+    <div class="top"><span class="name">${esc(t.name)}</span><span class="id">${esc(t.id)}</span>
+      <span class="chip applies ${t.applies === 'now' ? 'now' : ''}" title="when a change takes effect">${esc(t.applies || 'now')}</span>
+      ${t.inGame !== undefined && d.game?.live && Math.abs(t.inGame - t.value) > 1e-4 ? `<span class="chip skipped" title="the running game hasn't taken it yet">game: ${fmt(t.inGame, t.step)}</span>` : ''}</div>
+    <div class="desc">${esc(t.desc)}</div>
+    <div class="ctl"><input type="range" min="${t.min}" max="${t.max}" step="${t.step}" value="${t.value}" data-id="${esc(t.id)}">
+      <input type="number" min="${t.min}" max="${t.max}" step="${t.step}" value="${fmt(t.value, t.step)}" data-id="${esc(t.id)}"><span class="muted">${esc(t.unit)}</span>
+      ${t.changed ? `<button data-reset="${esc(t.id)}" title="back to ${fmt(t.default, t.step)}">reset</button><button data-default="${esc(t.id)}" title="write ${fmt(t.value, t.step)} into Tuning.json as the default">make default</button>` : `<span class="faint">default</span>`}</div>
+  </div>`).join('') || '<div class="muted" style="padding:10px 0">Nothing here.</div>';
+  return `<div class="card"><h2>${head}</h2>${sys ? `<div class="muted" style="margin-bottom:6px">${esc(sys.what)}</div><div class="note" style="margin:0 0 8px">${feeds}</div>` : ''}${rows}</div>`;
+}
+
+function mechRender() {
+  const d = mech.data;
+  const nChanged = d.tunables.filter((t) => t.changed).length;
+  const g = d.game;
+  $('#main').innerHTML = `<div class="mech-bar">
+      <input type="search" id="mq" placeholder="Search every number…" value="${esc(mech.search)}">
+      <label class="muted"><input type="checkbox" id="mchanged" ${mech.changedOnly ? 'checked' : ''}> what I changed (${nChanged})</label>
+      <button id="mundo">undo</button><button id="mresetall" ${nChanged ? '' : 'disabled'}>reset all</button>
+      <select id="mpreset"><option value="">presets…</option>${d.presets.map((p) => `<option>${esc(p)}</option>`).join('')}</select>
+      <button id="mload">load</button><input type="search" id="mpname" placeholder="preset name" style="min-width:140px"><button id="msave">save as preset</button>
+      <span class="right" id="mgame">${g ? (g.live ? `<span class="chip pass">game running</span> tuning ${esc(g.hash)}` : `<span class="chip skipped">game closed</span> last ran ${ago(g.at)}`) : '<span class="faint">the game hasn\'t run with the live link yet</span>'}</span>
+      <span class="muted" id="msaid">${esc(mech.said)}</span></div>
+    <div class="mech"><div><div class="card">${mechMap(d)}<div class="note">Click a system for its numbers; arrows show what feeds what (hover for how). Changes reach a running game within a second; "next game" ones on the next start.</div></div>
+      <div class="card"><h2>History</h2><div class="hist">${d.history.map((h) => `<div>${when(h.at)} · <b>${esc(h.id)}</b> ${esc(h.from)} → ${esc(h.to)} <span class="faint">${esc(h.why)}</span></div>`).join('') || '<span class="faint">No changes yet.</span>'}</div></div></div>
+      <div id="mlist">${mechList(d)}</div></div>`;
+  document.querySelectorAll('.mapsvg .box').forEach((b) => b.onclick = () => { mech.system = b.dataset.sys; mech.search = ''; mechRender(); });
+  $('#mq').oninput = (e) => { mech.search = e.target.value; $('#mlist').innerHTML = mechList(d); wireList(); };
+  $('#mchanged').onchange = (e) => { mech.changedOnly = e.target.checked; $('#mlist').innerHTML = mechList(d); wireList(); };
+  $('#mundo').onclick = () => act({ action: 'undo' });
+  $('#mresetall').onclick = () => act({ action: 'reset' });
+  $('#msave').onclick = () => { const n = $('#mpname').value.trim(); if (!n) { mech.said = 'Give the preset a name first.'; $('#msaid').textContent = mech.said; return; } act({ action: 'preset-save', name: n }); };
+  $('#mload').onclick = () => { const n = $('#mpreset').value; if (n) act({ action: 'preset-load', name: n }); };
+  wireList();
+}
+function wireList() {
+  document.querySelectorAll('#mlist input[type=range]').forEach((r) => {
+    const num = r.parentElement.querySelector('input[type=number]');
+    r.oninput = () => { num.value = r.value; };
+    r.onchange = () => act({ action: 'set', id: r.dataset.id, value: Number(r.value) });
+  });
+  document.querySelectorAll('#mlist input[type=number]').forEach((n) => n.onchange = () => act({ action: 'set', id: n.dataset.id, value: Number(n.value) }));
+  document.querySelectorAll('#mlist [data-reset]').forEach((b) => b.onclick = () => act({ action: 'reset', id: b.dataset.reset }));
+  document.querySelectorAll('#mlist [data-default]').forEach((b) => b.onclick = () => act({ action: 'make-default', id: b.dataset.default }));
+}
+async function act(body) {
+  const r = await post(body);
+  mech.said = r.said || (r.ok ? '' : 'failed');
+  mech.data = await get('/api/mechanics');
+  mechRender();
+}
+async function showMechanics() {
+  mech.data = await get('/api/mechanics');
+  if (!mech.system && !mech.search) mech.system = mech.data.systems[0]?.id || null;
+  mechRender();
+}
+// while the page is open: the game's status every 3 s (only that line, so a slider being dragged isn't redrawn)
+setInterval(async () => {
+  if (tab !== 'mechanics' || !mech.data) return;
+  const d = await get('/api/mechanics');
+  mech.data.game = d.game;
+  d.tunables.forEach((t, i) => { if (mech.data.tunables[i]) mech.data.tunables[i].inGame = t.inGame; });
+  const g = d.game, el = $('#mgame');
+  if (el) el.innerHTML = g ? (g.live ? `<span class="chip pass">game running</span> tuning ${esc(g.hash)}` : `<span class="chip skipped">game closed</span> last ran ${ago(g.at)}`) : '';
+}, 3000);
+
+// ---------------------------------------------------------------- Start here: a card per tool, keys, commands
+async function showStart() {
+  const g = await get('/api/guide');
+  if (g.missing) { $('#main').innerHTML = '<div class="card muted">No tools guide: the game has no Tools/tools_guide.json.</div>'; return; }
+  const cards = g.cards.map((c) => `<div class="card"><h2>${esc(c.name)}</h2><div style="margin-bottom:6px">${esc(c.for)}</div>
+    <div class="kv"><div>Open</div><div><code>${esc(c.open)}</code></div></div>
+    <ul style="margin:8px 0 0 18px;padding:0">${c.tasks.map((t) => `<li>${esc(t)}</li>`).join('')}</ul></div>`).join('');
+  const rows = (list) => list.map(([k, v]) => `<tr><td style="white-space:nowrap"><code>${esc(k)}</code></td><td>${esc(v)}</td></tr>`).join('');
+  $('#main').innerHTML = `<div class="note" style="margin:0 0 10px">Every tool the studio has: what it's for, how to open it, what you'd do with it. The gate fails if a tool has no card here.</div>
+    <div class="row">${cards}</div>
+    <div class="row"><div class="card"><h2>Keys</h2><table>${rows(g.keys || [])}</table></div>
+    <div class="card"><h2>Console commands</h2><table>${rows(g.commands || [])}</table></div></div>`;
+}
+
+const pages = { start: showStart, today: showToday, tests: showTests, nightlies: showNightlies, linear: showLinear, mechanics: showMechanics };
+function go(name) {
+  tab = pages[name] ? name : 'today';
+  document.querySelectorAll('nav button').forEach((b) => b.classList.toggle('on', b.dataset.tab === tab));
+  location.hash = tab;
+  $('#main').innerHTML = '<div class="muted">Loading…</div>';
+  pages[tab]().then(() => { $('#stamp').textContent = 'updated ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); })
+    .catch((e) => { $('#main').innerHTML = `<div class="card"><pre>${esc(e.stack || e)}</pre></div>`; });
+}
+document.querySelectorAll('nav button').forEach((b) => b.onclick = () => go(b.dataset.tab));
+window.addEventListener('hashchange', () => { const want = location.hash.slice(1); if (want !== tab) go(want); });
+if (tab !== 'today') get('/api/today').then((t) => { $('#game').textContent = `${t.game} · Dev Hub`; $('#build').textContent = t.build || ''; });
+go(tab);
+setInterval(() => { if (tab === 'today') go('today'); }, 120000);
+</script>
+</body>
+</html>

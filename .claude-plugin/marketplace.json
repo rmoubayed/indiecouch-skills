@@ -1,0 +1,16 @@
+{
+  "name": "indiecouch",
+  "owner": {
+    "name": "Indie Couch Games"
+  },
+  "plugins": [
+    {
+      "name": "indiecouch-studio",
+      "source": "./",
+      "description": "Indie Couch Games' studio toolkit: workflow skills, shared tools, templates and the Dev Hub."
+    }
+  ],
+  "metadata": {
+    "description": "Indie Couch Games' studio plugins: game-dev workflow skills and tools."
+  }
+}

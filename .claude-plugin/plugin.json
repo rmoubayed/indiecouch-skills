@@ -1,0 +1,8 @@
+{
+  "name": "indiecouch-studio",
+  "version": "0.5.1",
+  "description": "Indie Couch Games' studio toolkit: game-dev workflow skills, shared tools (scripted Unreal runs and shots, gates, Linear and Fireflies helpers, art pipelines), templates for a new game, and the Dev Hub.",
+  "author": { "name": "Indie Couch Games" },
+  "repository": "https://github.com/rmoubayed/indiecouch-skills",
+  "keywords": ["gamedev", "unreal", "workflow", "linear", "testing"]
+}
