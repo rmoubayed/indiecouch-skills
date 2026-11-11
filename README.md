@@ -3,9 +3,15 @@
 How Indie Couch Games makes games: the studio's skills, shared tools and the Dev Hub, kept apart from any one game.
 The skills are game agnostic and high level: they say what's needed and why, and the agent writes its own tools.
 
-They come from building a AAA RTS in Unreal Engine 5 and C++, with one person directing and AI agents (Claude Code)
-doing the hands-on work: code, art, animation, testing and delivery. They change as we learn. Feedback is very welcome:
-open an issue with what's missing, wrong or worked differently for you.
+**TL;DR:** the development workflow an AI agent (Claude Code) follows to make games in Unreal Engine 5. It's for any
+kind of game, not one genre. Today it is built for, and tested only on, Unreal Engine 5 and C++.
+
+Some background: I've been a software engineer my whole life, but I'd only dabbled in game engines and C++. Making games
+has always been the dream. I'm now learning it by building a AAA RTS, with AI agents doing the hands-on work (code, art,
+animation, testing, delivery) while I direct and learn the game-dev concepts as I go. These skills are what I've
+learned so far, written so the next game, and hopefully yours, starts from there. Expect gaps: there's a lot of game
+development I'm still learning. Feedback is very welcome: open an issue with what's missing, wrong or works
+differently for you.
 
 ## The skills
 
